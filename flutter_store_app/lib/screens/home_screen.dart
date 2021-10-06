@@ -3,12 +3,17 @@ import 'package:backdrop/button.dart';
 import 'package:backdrop/scaffold.dart';
 import 'package:card_swiper/card_swiper.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/animation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_store_app/navigation_rail/brand_nav_rail.dart';
+import 'package:flutter_store_app/provider/products_provider.dart';
+import 'package:flutter_store_app/screens/feed_screen.dart';
 import 'package:flutter_store_app/widgets/back_layer_widget.dart';
 import 'package:flutter_store_app/widgets/category_widget.dart';
 import 'package:flutter_store_app/widgets/popular_prod_widget.dart';
+import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -21,28 +26,53 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _activeIndex = 0;
   final _imageList = [
-    'https://images.unsplash.com/photo-1473187983305-f615310e7daa?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1500&q=80'
-        'https://image.shutterstock.com/shutterstock/photos/1896887080/display_1500/stock-photo--d-rendering-of-smartphone-and-online-shopping-1896887080.jpg',
-    'https://image.shutterstock.com/image-illustration/3d-rendering-minimal-search-bar-600w-1899017110.jpg',
-    'https://images.unsplash.com/photo-1607082349566-187342175e2f?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=750&q=80',
+    'assets/images/carousel2.jpeg',
+    'assets/images/onlinesh.png',
+    'assets/images/smartph.jpg',
   ];
   final _brandImage = [
-    'https://s3.amazonaws.com/cdn.designcrowd.com/blog/100-Famous-Brand%20Logos-From-The-Most-Valuable-Companies-of-2020/coca-cola-logo.png',
+    'https://st2.depositphotos.com/1102480/6675/i/600/depositphotos_66757781-stock-photo-apple-logotype-printed-on-paper.jpg',
     'https://s3.amazonaws.com/cdn.designcrowd.com/blog/100-Famous-Brand%20Logos-From-The-Most-Valuable-Companies-of-2020/samsung-logo.png',
-    'https://s3.amazonaws.com/cdn.designcrowd.com/blog/100-Famous-Brand%20Logos-From-The-Most-Valuable-Companies-of-2020/gucci-logo.png',
-    'https://s3.amazonaws.com/cdn.designcrowd.com/blog/100-Famous-Brand%20Logos-From-The-Most-Valuable-Companies-of-2020/loreal-logo.png',
+    'https://1000logos.net/wp-content/uploads/2021/04/HyperX-logo-500x286.png',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Xiaomi_logo_%282021-%29.svg/1200px-Xiaomi_logo_%282021-%29.svg.png',
   ];
   @override
+  void initState() {
+    super.initState();
+    getData();
+  }
+
+  String? _imgUrl;
+  Future<void> getData() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    final _uid = user!.uid;
+    final DocumentSnapshot? userDoc = (user.isAnonymous
+        ? null
+        : await FirebaseFirestore.instance.collection('users').doc(_uid).get());
+    if (userDoc == null) {
+      return;
+    } else {
+      setState(() {
+        _imgUrl = userDoc.get('imageUrl');
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final prodData = Provider.of<Products>(context);
+    prodData.fetchProductsFromFireStore();
+    final popularProd = prodData.popularProducts;
+
     return Scaffold(
       body: Center(
         child: BackdropScaffold(
           frontLayerBackgroundColor: Theme.of(context).scaffoldBackgroundColor,
           headerHeight: MediaQuery.of(context).size.height * 0.25,
           appBar: BackdropAppBar(
-            title: Text("Backdrop Example"),
+            title: Text("Store"),
             leading: BackdropToggleButton(
-              color: Colors.black,
+              color: Colors.purple,
               icon: AnimatedIcons.home_menu,
             ),
             actions: <Widget>[
@@ -52,13 +82,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: CircleAvatar(
                   radius: 15,
                   backgroundColor: Colors.white,
-                  backgroundImage: NetworkImage(
-                      'https://t3.ftcdn.net/jpg/01/83/55/76/240_F_183557656_DRcvOesmfDl5BIyhPKrcWANFKy2964i9.jpg'),
+                  backgroundImage: NetworkImage(_imgUrl == null
+                      ? 'https://t3.ftcdn.net/jpg/01/83/55/76/240_F_183557656_DRcvOesmfDl5BIyhPKrcWANFKy2964i9.jpg'
+                      : _imgUrl!),
                 ),
               ),
             ],
           ),
-          backLayer: BackLayerMenuScreen(),
+          backLayer: BackLayerMenuScreen(
+            img: _imgUrl == null
+                ? 'https://t3.ftcdn.net/jpg/01/83/55/76/240_F_183557656_DRcvOesmfDl5BIyhPKrcWANFKy2964i9.jpg'
+                : _imgUrl!,
+          ),
           frontLayer: SingleChildScrollView(
             child: Column(
               children: [
@@ -108,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       height: 180,
                       width: double.infinity,
                       child: ListView.builder(
-                          itemCount: 6,
+                          itemCount: 4,
                           scrollDirection: Axis.horizontal,
                           itemBuilder: (BuildContext ctx, int index) {
                             return CategoryWidget(
@@ -129,7 +164,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           Spacer(),
                           TextButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.of(context).pushNamed(
+                                BrandNavRailScreen.routeName,
+                                arguments: {
+                                  7,
+                                },
+                              );
+                            },
                             child: Text('View all..'),
                           ),
                         ],
@@ -175,7 +217,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           Spacer(),
                           TextButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.of(context).pushNamed(
+                                  FeedScreen.routeName,
+                                  arguments: 'popular');
+                            },
                             child: Text('View all..'),
                           ),
                         ],
@@ -186,10 +232,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       height: 285,
                       margin: EdgeInsets.symmetric(horizontal: 3),
                       child: ListView.builder(
-                          itemCount: 6,
+                          itemCount: popularProd.length,
                           scrollDirection: Axis.horizontal,
                           itemBuilder: (BuildContext context, int index) {
-                            return PopularProducts();
+                            return ChangeNotifierProvider.value(
+                              value: popularProd[index],
+                              child: PopularProducts(),
+                            );
                           }),
                     ),
                   ],
@@ -207,7 +256,7 @@ class _HomeScreenState extends State<HomeScreen> {
       width: MediaQuery.of(context).size.width,
       margin: EdgeInsets.symmetric(horizontal: 8),
       color: Colors.grey,
-      child: Image.network(
+      child: Image.asset(
         img,
         fit: BoxFit.cover,
       ),

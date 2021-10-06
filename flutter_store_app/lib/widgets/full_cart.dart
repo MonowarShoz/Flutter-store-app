@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_store_app/consts/alert_dialog.dart';
 
 import 'package:flutter_store_app/consts/app_colors.dart';
-import 'package:flutter_store_app/consts/themes.dart';
+import 'package:flutter_store_app/models/cart.dart';
+
+import 'package:flutter_store_app/provider/carts_provider.dart';
+
 import 'package:flutter_store_app/provider/dark_theme.dart';
+import 'package:flutter_store_app/screens/product_detail_screen.dart';
 import 'package:fluttericon/font_awesome5_icons.dart';
 import 'package:provider/provider.dart';
 
 class FullCart extends StatefulWidget {
-  const FullCart({Key? key}) : super(key: key);
+  final String prodId;
+  const FullCart({Key? key, required this.prodId}) : super(key: key);
 
   @override
   _FullCartState createState() => _FullCartState();
@@ -17,6 +23,12 @@ class _FullCartState extends State<FullCart> {
   @override
   Widget build(BuildContext context) {
     final themeChange = Provider.of<DarkThemeProvider>(context);
+    final cartModel = Provider.of<Cart>(context);
+    final cartProvider = Provider.of<CartProvider>(context);
+
+    var subTotal = cartModel.price * cartModel.quantity;
+
+    ShowDialogs showDialogs = ShowDialogs();
     return Container(
       height: MediaQuery.of(context).size.height * 0.23,
       margin: const EdgeInsets.all(10),
@@ -25,17 +37,21 @@ class _FullCartState extends State<FullCart> {
           bottomRight: const Radius.circular(16.0),
           topRight: const Radius.circular(16.0),
         ),
-        color: themeChange.darkTheme ? Colors.yellow : Colors.lightBlueAccent,
+        color: themeChange.darkTheme ? Colors.grey.shade200 : Colors.white,
       ),
       child: Row(
         children: [
-          Container(
-            width: 130,
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: NetworkImage(
-                    'https://5.imimg.com/data5/YJ/BO/MY-10973479/mens-designer-casual-shirt-500x500.jpg'),
-                fit: BoxFit.fill,
+          InkWell(
+            onTap: () {
+              Navigator.pushNamed(context, ProductDetailScreen.routeName,
+                  arguments: widget.prodId);
+            },
+            child: Container(
+              width: 130,
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: NetworkImage(cartModel.imgUrl),
+                ),
               ),
             ),
           ),
@@ -49,7 +65,7 @@ class _FullCartState extends State<FullCart> {
                     children: [
                       Flexible(
                         child: Text(
-                          'title',
+                          cartModel.title,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -63,13 +79,19 @@ class _FullCartState extends State<FullCart> {
                       Material(
                         color: Colors.transparent,
                         child: InkWell(
-                          onTap: () {},
+                          onTap: () {
+                            showDialogs.showAlertDialog(
+                                'Remove Item',
+                                'Product will be discarded from the cart',
+                                () => cartProvider.removeCart(widget.prodId),
+                                context);
+                          },
                           borderRadius: BorderRadius.circular(30),
                           child: Container(
                             height: 50,
                             width: 50,
                             child: Icon(
-                              FontAwesome5.trash_alt,
+                              FontAwesome5.trash_restore,
                               color: Colors.red,
                               size: 20,
                             ),
@@ -81,7 +103,7 @@ class _FullCartState extends State<FullCart> {
                   Row(
                     children: [
                       Text(
-                        'Price:',
+                        'Price',
                         style: TextStyle(
                             color: themeChange.darkTheme
                                 ? Colors.blue
@@ -91,7 +113,7 @@ class _FullCartState extends State<FullCart> {
                         width: 5,
                       ),
                       Text(
-                        '450\$',
+                        '${cartModel.price}\$',
                         style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -114,7 +136,7 @@ class _FullCartState extends State<FullCart> {
                         width: 5,
                       ),
                       Text(
-                        '450\$',
+                        '${subTotal.toStringAsFixed(2)} \$',
                         style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -138,14 +160,25 @@ class _FullCartState extends State<FullCart> {
                       Material(
                         color: Colors.transparent,
                         child: InkWell(
-                          onTap: () {},
+                          onTap: cartModel.quantity < 2
+                              ? null
+                              : () {
+                                  cartProvider.reduceFromCart(
+                                    widget.prodId,
+                                    cartModel.title,
+                                    cartModel.price,
+                                    cartModel.imgUrl,
+                                  );
+                                },
                           borderRadius: BorderRadius.circular(4.0),
                           child: Container(
                             child: Padding(
                               padding: const EdgeInsets.all(5.0),
                               child: Icon(
                                 FontAwesome5.minus,
-                                color: Colors.red,
+                                color: cartModel.quantity < 2
+                                    ? Colors.grey
+                                    : Colors.red,
                                 size: 20,
                               ),
                             ),
@@ -167,7 +200,8 @@ class _FullCartState extends State<FullCart> {
                             ]),
                           ),
                           child: Text(
-                            '154',
+                            cartModel.quantity.toString(),
+                            style: TextStyle(color: Colors.white),
                             textAlign: TextAlign.center,
                           ),
                         ),
@@ -175,7 +209,14 @@ class _FullCartState extends State<FullCart> {
                       Material(
                         color: Colors.transparent,
                         child: InkWell(
-                          onTap: () {},
+                          onTap: () {
+                            cartProvider.addToCart(
+                              widget.prodId,
+                              cartModel.title,
+                              cartModel.price,
+                              cartModel.imgUrl,
+                            );
+                          },
                           borderRadius: BorderRadius.circular(4.0),
                           child: Container(
                             child: Padding(

@@ -9,6 +9,7 @@ import 'package:flutter_store_app/screens/user_profile.dart';
 import 'package:fluttericon/font_awesome5_icons.dart';
 
 class BottomBarScreen extends StatefulWidget {
+  static const routeName = '/BottomBarScreen';
   const BottomBarScreen({Key? key}) : super(key: key);
 
   @override
@@ -16,7 +17,7 @@ class BottomBarScreen extends StatefulWidget {
 }
 
 class _BottomBarScreenState extends State<BottomBarScreen> {
-  List? _pages;
+   List? _pages;
 
   int _selectedPageIndex = 0;
   @override

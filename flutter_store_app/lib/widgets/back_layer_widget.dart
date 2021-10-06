@@ -1,13 +1,15 @@
-import 'dart:js';
+
 
 import 'package:flutter/material.dart';
 import 'package:flutter_store_app/consts/app_colors.dart';
 import 'package:flutter_store_app/screens/cart_screen.dart';
 import 'package:flutter_store_app/screens/feed_screen.dart';
+import 'package:flutter_store_app/screens/wishlist_screen.dart';
 import 'package:fluttericon/font_awesome5_icons.dart';
 
 class BackLayerMenuScreen extends StatelessWidget {
-  const BackLayerMenuScreen({Key? key}) : super(key: key);
+  final String img;
+  const BackLayerMenuScreen({Key? key, required this.img}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +20,7 @@ class BackLayerMenuScreen extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                ColorsConsts.starterColor,
+                Colors.orange,
                 ColorsConsts.endColor,
               ],
               begin: const FractionalOffset(0.0, 0.0),
@@ -86,14 +88,14 @@ class BackLayerMenuScreen extends StatelessWidget {
                     height: 100,
                     width: 100,
                     decoration: BoxDecoration(
-                      color: Theme.of(context).backgroundColor,
+                     // color: Theme.of(context).backgroundColor,
                       borderRadius: BorderRadius.circular(20.0),
                     ),
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20.0),
+                        borderRadius: BorderRadius.circular(38.0),
                         image: DecorationImage(
-                          image: AssetImage('assets/images/Beauty.jpg'),
+                          image: NetworkImage(img),
                           fit: BoxFit.fill,
                         ),
                       ),
@@ -111,7 +113,7 @@ class BackLayerMenuScreen extends StatelessWidget {
                 backLayerContent(
                   context,
                   () {
-                    navigateTo(context, FeedScreen.routeName);
+                    navigateTo(context, WishListScreen.routeName);
                   },
                   'Wishlist',
                   1,

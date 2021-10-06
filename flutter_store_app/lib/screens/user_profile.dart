@@ -1,6 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_store_app/consts/app_colors.dart';
 import 'package:flutter_store_app/provider/dark_theme.dart';
+import 'package:flutter_store_app/screens/cart_screen.dart';
 import 'package:flutter_store_app/screens/wishlist_screen.dart';
 import 'package:fluttericon/font_awesome5_icons.dart';
 import 'package:list_tile_switch/list_tile_switch.dart';
@@ -12,17 +16,44 @@ class UserProfile extends StatefulWidget {
 }
 
 class _UserProfileState extends State<UserProfile> {
- 
   late ScrollController _scrollController;
   var top = 0.0;
-
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  String? _uid;
+  String? _name;
+  String _email = '';
+  String? _joinedAt = '';
+  int? _phoneNumber;
+  String? _imgUrl ;
   @override
   void initState() {
+    super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(() {
       setState(() {});
     });
-    super.initState();
+
+    getDataFromFirebase();
+  }
+
+  Future<void> getDataFromFirebase() async {
+    User? user = _auth.currentUser;
+    _uid = user!.uid;
+    final DocumentSnapshot? userDocs = (user.isAnonymous
+        ? null
+        : await FirebaseFirestore.instance.collection('users').doc(_uid).get());
+
+    if (userDocs == null) {
+      return;
+    } else {
+      setState(() {
+        _name = userDocs.get('name');
+        _email = userDocs.get('email');
+        _phoneNumber = userDocs.get('phoneNumber');
+        _imgUrl = userDocs.get('imageUrl');
+        _joinedAt = userDocs.get('joinedAt');
+      });
+    }
   }
 
   @override
@@ -39,8 +70,8 @@ class _UserProfileState extends State<UserProfile> {
                 elevation: 4,
                 expandedHeight: 200,
                 pinned: true,
-                flexibleSpace: LayoutBuilder(
-                    builder: (BuildContext context, BoxConstraints constraints) {
+                flexibleSpace: LayoutBuilder(builder:
+                    (BuildContext context, BoxConstraints constraints) {
                   top = constraints.biggest.height;
                   return Container(
                     decoration: BoxDecoration(
@@ -78,14 +109,15 @@ class _UserProfileState extends State<UserProfile> {
                                 shape: BoxShape.circle,
                                 image: DecorationImage(
                                   fit: BoxFit.fill,
-                                  image: NetworkImage(
-                                      'https://t3.ftcdn.net/jpg/01/83/55/76/240_F_183557656_DRcvOesmfDl5BIyhPKrcWANFKy2964i9.jpg'),
+                                  image: NetworkImage(_imgUrl == null
+                                      ? 'https://t3.ftcdn.net/jpg/01/83/55/76/240_F_183557656_DRcvOesmfDl5BIyhPKrcWANFKy2964i9.jpg'
+                                      : _imgUrl!),
                                 ),
                               ),
                             ),
                             SizedBox(width: 12),
                             Text(
-                              'Guest',
+                              _name == null ? 'Guest' : _name!,
                               style: TextStyle(
                                 fontSize: 20.0,
                                 color: Colors.white,
@@ -97,7 +129,10 @@ class _UserProfileState extends State<UserProfile> {
                       background: Image(
                         fit: BoxFit.fill,
                         image: NetworkImage(
-                            'https://t3.ftcdn.net/jpg/01/83/55/76/240_F_183557656_DRcvOesmfDl5BIyhPKrcWANFKy2964i9.jpg'),
+                          _imgUrl == null
+                              ? 'https://t3.ftcdn.net/jpg/01/83/55/76/240_F_183557656_DRcvOesmfDl5BIyhPKrcWANFKy2964i9.jpg'
+                              : _imgUrl!,
+                        ),
                       ),
                     ),
                   );
@@ -109,7 +144,7 @@ class _UserProfileState extends State<UserProfile> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(left: 8.0),
+                      padding: const EdgeInsets.all(8.0),
                       child: userTextTile('User Bag'),
                     ),
                     Divider(
@@ -120,7 +155,8 @@ class _UserProfileState extends State<UserProfile> {
                       color: Colors.transparent,
                       child: InkWell(
                         onTap: () {
-                          Navigator.of(context).pushNamed(WishListScreen.routeName);
+                          Navigator.of(context)
+                              .pushNamed(WishListScreen.routeName);
                         },
                         splashColor: Colors.red,
                         child: ListTile(
@@ -131,23 +167,26 @@ class _UserProfileState extends State<UserProfile> {
                       ),
                     ),
                     ListTile(
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.of(context).pushNamed(CartScreen.routeName);
+                      },
                       title: Text('Cart'),
                       trailing: Icon(Icons.chevron_right_rounded),
                       leading: Icon(FontAwesome5.cart_plus),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(left: 8.0),
+                      padding: const EdgeInsets.all(8.0),
                       child: userTextTile('User Information'),
                     ),
                     Divider(
                       thickness: 1,
                       color: Colors.grey,
                     ),
-                    userListTile('email', 'Email address', 0, context),
-                    userListTile('phone', '+8801', 1, context),
+                    userListTile('email', _email, 0, context),
+                    userListTile('phone', _phoneNumber.toString(), 1, context),
                     userListTile('Shipping address', 'subtitle', 2, context),
-                    userListTile('Joined Date', '', 3, context),
+                    userListTile(
+                        'Joined Date', _joinedAt.toString(), 3, context),
                     Padding(
                       padding: const EdgeInsets.only(left: 8.0),
                       child: userTextTile('User Settings'),
@@ -169,22 +208,74 @@ class _UserProfileState extends State<UserProfile> {
                       switchActiveColor: Colors.indigo,
                       title: Text('Default Switch'),
                     ),
-                    userListTile('Log Out', '', 4, context),
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        child: ListTile(
+                          title: Text('Log Out'),
+                          leading: Icon(Icons.exit_to_app_rounded),
+                          onTap: () async {
+                            showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: Row(
+                                      children: [
+                                        Padding(
+                                          padding:
+                                              const EdgeInsets.only(right: 6.0),
+                                          child: Image.network(
+                                            'https://image.flaticon.com/icons/png/128/1828/1828304.png',
+                                            height: 20,
+                                            width: 20,
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Text('Sign out'),
+                                        ),
+                                      ],
+                                    ),
+                                    content: Text('Do you wanna Sign out?'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () async {
+                                          Navigator.pop(context);
+                                        },
+                                        child: Text('Cancel'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () async {
+                                          await _auth.signOut().then(
+                                                (value) =>
+                                                    Navigator.pop(context),
+                                              );
+                                        },
+                                        child: Text(
+                                          'Ok',
+                                          style: TextStyle(color: Colors.red),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                });
+                          },
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
             ],
-          
           ),
           _buildFab(),
         ],
       ),
-     
     );
   }
 
   Widget _buildFab() {
-    final double defaultTopMargin = 200.0 - 4.0;
+    final double defaultTopMargin = 200.0 - 30.0;
     final double scaleStart = 160.0;
     final double scaleEnd = scaleStart / 2;
     double top = defaultTopMargin;
@@ -216,9 +307,9 @@ class _UserProfileState extends State<UserProfile> {
     );
   }
 
-  Widget userTextTile(String title) {
+  Widget userTextTile(String? title) {
     return Text(
-      title,
+      title!,
       style: TextStyle(
         fontWeight: FontWeight.bold,
         fontSize: 20,
@@ -235,14 +326,14 @@ class _UserProfileState extends State<UserProfile> {
   ];
 
   Widget userListTile(
-      String title, String subtitle, int index, BuildContext context) {
+      String? title, String subtitle, int index, BuildContext context) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
         splashColor: Theme.of(context).splashColor,
         child: ListTile(
           onTap: () {},
-          title: Text(title),
+          title: Text(title!),
           subtitle: Text(subtitle),
           leading: Icon(_userTileIcons[index]),
         ),

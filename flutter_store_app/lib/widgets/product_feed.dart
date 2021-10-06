@@ -1,8 +1,10 @@
-import 'dart:js';
-
 import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_store_app/consts/alert_dialog.dart';
+import 'package:flutter_store_app/models/product.dart';
 import 'package:flutter_store_app/screens/product_detail_screen.dart';
+import 'package:flutter_store_app/widgets/dialog_feed.dart';
+import 'package:provider/provider.dart';
 
 class ProductFeed extends StatefulWidget {
   const ProductFeed({Key? key}) : super(key: key);
@@ -14,14 +16,17 @@ class ProductFeed extends StatefulWidget {
 class _ProductFeedState extends State<ProductFeed> {
   @override
   Widget build(BuildContext context) {
+    final prodAttribute = Provider.of<Product>(context);
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: InkWell(
         onTap: () {
-          Navigator.pushNamed(context, ProductDetailScreen.routeName);
+          Navigator.pushNamed(context, ProductDetailScreen.routeName,
+              arguments: prodAttribute.id);
         },
         child: Container(
-          width: 250,
+          width: 150,
+          height: 690,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(6),
             color: Theme.of(context).backgroundColor,
@@ -36,24 +41,24 @@ class _ProductFeedState extends State<ProductFeed> {
                         borderRadius: BorderRadius.circular(2),
                         child: Container(
                           width: double.infinity,
-                          constraints: BoxConstraints(
-                            minHeight: 100,
-                            maxHeight: MediaQuery.of(context).size.height * 0.3,
-                          ),
-                          child: Image.asset(
-                            "assets/images/Phones.png",
+                          height: MediaQuery.of(context).size.height * 0.2,
+                          child: Image.network(
+                            prodAttribute.imgUrl,
                             fit: BoxFit.cover,
                           ),
                         ),
                       ),
-                      Badge(
-                        toAnimate: false,
-                        shape: BadgeShape.square,
-                        badgeColor: Colors.deepPurple,
-                        borderRadius: BorderRadius.circular(8),
-                        badgeContent: Text(
-                          'NEW',
-                          style: TextStyle(color: Colors.white),
+                      Positioned(
+                        child: Badge(
+                          alignment: Alignment.center,
+                          toAnimate: true,
+                          shape: BadgeShape.square,
+                          badgeColor: Colors.deepPurple,
+                          borderRadius: BorderRadius.circular(8),
+                          badgeContent: Text(
+                            'NEW',
+                            style: TextStyle(color: Colors.white),
+                          ),
                         ),
                       ),
                     ],
@@ -62,7 +67,7 @@ class _ProductFeedState extends State<ProductFeed> {
               ),
               Container(
                 padding: EdgeInsets.only(left: 5),
-                margin: EdgeInsets.only(left: 5, bottom: 2, right: 3),
+                margin: EdgeInsets.all(8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -70,9 +75,9 @@ class _ProductFeedState extends State<ProductFeed> {
                       height: 4,
                     ),
                     Text(
-                      'Description',
+                      prodAttribute.description,
                       overflow: TextOverflow.ellipsis,
-                      maxLines: 2,
+                      maxLines: 1,
                       style: TextStyle(
                           fontSize: 15,
                           color: Colors.black,
@@ -81,7 +86,7 @@ class _ProductFeedState extends State<ProductFeed> {
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
                       child: Text(
-                        '\$ 158.99',
+                        '\u{09F3} ${prodAttribute.price}',
                         overflow: TextOverflow.ellipsis,
                         maxLines: 2,
                         style: TextStyle(
@@ -94,7 +99,7 @@ class _ProductFeedState extends State<ProductFeed> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Quantity: 12',
+                          '${prodAttribute.quantity}',
                           style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey,
@@ -103,7 +108,13 @@ class _ProductFeedState extends State<ProductFeed> {
                         Material(
                           color: Colors.transparent,
                           child: InkWell(
-                            onTap: () {},
+                            onTap: () async {
+                              showDialog(
+                                  context: context,
+                                  builder: (ctx) => DialogFeed(
+                                        prodId: prodAttribute.id,
+                                      ));
+                            },
                             borderRadius: BorderRadius.circular(18.0),
                             child: Icon(
                               Icons.more_horiz,

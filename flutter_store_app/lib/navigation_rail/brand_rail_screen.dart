@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_store_app/models/product.dart';
+
+import 'package:flutter_store_app/screens/product_detail_screen.dart';
+import 'package:provider/provider.dart';
 
 class BrandRailScreen extends StatelessWidget {
   const BrandRailScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final prodAttr = Provider.of<Product>(context);
     return InkWell(
-      onTap: (){},
+      onTap: (){
+        Navigator.pushNamed(context, ProductDetailScreen.routeName, arguments: prodAttr.id);
+      },
       child: Container(
         padding: EdgeInsets.only(left: 5.0, right: 5.0),
         margin: EdgeInsets.only(right: 20.0, bottom: 5, top: 18),
@@ -18,7 +25,7 @@ class BrandRailScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Theme.of(context).backgroundColor,
                   image: DecorationImage(
-                    image: AssetImage('assets/images/Shoes.jpg'),
+                    image: NetworkImage(prodAttr.imgUrl),
                   ),
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                   boxShadow: [
@@ -52,7 +59,7 @@ class BrandRailScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      'title',
+                      prodAttr.title,
                       maxLines: 4,
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
@@ -62,7 +69,7 @@ class BrandRailScreen extends StatelessWidget {
                     SizedBox(height: 20.0),
                     FittedBox(
                       child: Text(
-                        'US 16 \$',
+                        'US \$ ${prodAttr.price}',
                         maxLines: 1,
                         style: TextStyle(
                           color: Colors.red,
@@ -72,7 +79,7 @@ class BrandRailScreen extends StatelessWidget {
                     ),
                     SizedBox(height: 20),
                     Text(
-                      'CatergoryName',
+                      prodAttr.prodCategoryName,
                       style: TextStyle(
                         color: Colors.grey,
                         fontSize: 18.0,

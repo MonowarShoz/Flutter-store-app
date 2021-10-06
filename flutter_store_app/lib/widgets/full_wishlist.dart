@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_store_app/consts/alert_dialog.dart';
 import 'package:flutter_store_app/consts/app_colors.dart';
+import 'package:flutter_store_app/models/favorite.dart';
+import 'package:flutter_store_app/provider/favorite_provider.dart';
+import 'package:provider/provider.dart';
 
 class FullWishListScreen extends StatefulWidget {
-  const FullWishListScreen({Key? key}) : super(key: key);
+  final String prodId;
+  const FullWishListScreen({Key? key, required this.prodId}) : super(key: key);
 
   @override
   _FullWishListScreenState createState() => _FullWishListScreenState();
@@ -11,14 +16,15 @@ class FullWishListScreen extends StatefulWidget {
 class _FullWishListScreenState extends State<FullWishListScreen> {
   @override
   Widget build(BuildContext context) {
+    final favourite = Provider.of<Favourite>(context);
     return Stack(
       children: [
         Container(
           width: double.infinity,
           margin: EdgeInsets.only(right: 30.0, bottom: 10.0),
           child: Material(
-             color: Theme.of(context).backgroundColor,
-             borderRadius: BorderRadius.circular(5.0),
+            color: Theme.of(context).backgroundColor,
+            borderRadius: BorderRadius.circular(5.0),
             elevation: 3.0,
             child: InkWell(
               onTap: () {},
@@ -28,7 +34,9 @@ class _FullWishListScreenState extends State<FullWishListScreen> {
                   children: [
                     Container(
                       height: 80,
-                      child: Image.asset('assets/images/Shoes.jpg'),
+                      child: Image.network(
+                        favourite.imgUrl,
+                      ),
                     ),
                     SizedBox(
                       width: 10,
@@ -36,7 +44,7 @@ class _FullWishListScreenState extends State<FullWishListScreen> {
                     Column(
                       children: [
                         Text(
-                          'title',
+                          favourite.title,
                           style: TextStyle(
                               fontSize: 16.0, fontWeight: FontWeight.bold),
                         ),
@@ -44,7 +52,7 @@ class _FullWishListScreenState extends State<FullWishListScreen> {
                           height: 10.0,
                         ),
                         Text(
-                          '\$ 20',
+                          '\$ ${favourite.price}',
                           style: TextStyle(
                               fontSize: 18.0, fontWeight: FontWeight.bold),
                         ),
@@ -56,12 +64,14 @@ class _FullWishListScreenState extends State<FullWishListScreen> {
             ),
           ),
         ),
-        removeWish(),
+        removeWish(widget.prodId),
       ],
     );
   }
 
-  Widget removeWish() {
+  Widget removeWish(String prodId) {
+    final favProvider = Provider.of<FavoriteProvider>(context);
+    ShowDialogs showDialogs = ShowDialogs();
     return Positioned(
       top: 20,
       right: 15,
@@ -69,7 +79,14 @@ class _FullWishListScreenState extends State<FullWishListScreen> {
         height: 30,
         width: 30,
         child: MaterialButton(
-          onPressed: () {},
+          onPressed: () {
+            showDialogs.showAlertDialog(
+              'Clear Wishlist',
+              'item will be removed',
+              () => favProvider.removeItem(prodId),
+              context,
+            );
+          },
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
           padding: EdgeInsets.all(0.0),
           color: ColorsConsts.favColor,
