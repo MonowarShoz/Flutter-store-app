@@ -5,7 +5,10 @@ import 'package:flutter_store_app/screens/feed_screen.dart';
 import 'package:provider/provider.dart';
 
 class EmptyCart extends StatelessWidget {
-  const EmptyCart({Key? key}) : super(key: key);
+  final String title;
+  final String subTitle;
+  final String btnTitle;
+  const EmptyCart({Key? key, required this.title, required this.subTitle, required this.btnTitle}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +28,7 @@ class EmptyCart extends StatelessWidget {
             ),
           ),
           Text(
-            'Your cart is empty',
+            title,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Theme.of(context).textSelectionTheme.selectionColor,
@@ -34,8 +37,9 @@ class EmptyCart extends StatelessWidget {
             ),
           ),
           SizedBox(height: 50),
-          Text(
-            'Looks like you don\'t \n have any product in your cart',
+          Text(subTitle,
+ 
+            //'Looks like you don\'t \n have any product in your cart',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: themeChange.darkTheme
@@ -53,7 +57,7 @@ class EmptyCart extends StatelessWidget {
               onPressed: () {
                 Navigator.of(context).pushNamed(FeedScreen.routeName);
               },
-              child: Text('Shop Now'),
+              child: Text(btnTitle),
               style: ElevatedButton.styleFrom(
                 textStyle: TextStyle(
                   fontSize: 20,
